@@ -13,6 +13,7 @@
 #include "test.h"        // for the unit tests
 #include <cmath>         // for SQRT
 #include <cassert>       // for ASSERT
+#include <iostream>      // for debugging
 using namespace std;
 
 
@@ -23,10 +24,70 @@ using namespace std;
 class Simulator
 {
 public:
-   Simulator(const Position & posUpperRight) : ground(posUpperRight) {}
-   Ground ground;
-};
+   Simulator(const Position & posUpperRight)
+      : lander(posUpperRight), ground(posUpperRight), gravity(-1.625), timeStep(0.1)
+   {
+      
+   }
 
+   void update(const Interface* pUI)
+   {
+      if (!isRunning())
+         return;
+
+      handleInput(pUI);
+
+      // Apply gravity to the lander
+      const double gravity = -1.625;
+
+      // Handle user input and get acceleration
+      Acceleration acceleration = lander.input(thrust, gravity);
+
+      // Update the lander's position every 0.1 seconds if it hasn't landed anywhere
+      if (!ground.onPlatform(lander.getPosition(), lander.getWidth()) && !ground.hitGround(lander.getPosition(), lander.getWidth()))
+      {
+         lander.coast(acceleration, 0.1);
+      }
+
+      // Check if conditions for landing or crashing are met
+      if (ground.hitGround(lander.getPosition(), lander.getWidth()) || 
+          (ground.onPlatform(lander.getPosition(), lander.getWidth()) && lander.getMaxSpeed() < lander.getSpeed()))
+      {
+         lander.crash(); // Fail, crash!!!
+      }
+      else if (ground.onPlatform(lander.getPosition(), lander.getWidth()) && lander.getMaxSpeed() >= lander.getSpeed())
+      {
+         lander.land(); // Success, landed!!!!
+      }
+   }
+
+   void draw(ogstream& gout) const
+   {
+      // Draw the ground
+      ground.draw(gout);
+
+      // Draw the lander
+      lander.draw(thrust, gout);
+   }
+
+   void handleInput(const Interface* pUI)
+   {
+      // Set the thrusters based on user input
+      thrust.set(pUI);
+   }
+
+   bool isRunning() const
+   {
+      return lander.isFlying();
+   }
+
+private:
+   Ground ground;
+   Lander lander;
+   Thrust thrust;
+   double gravity;
+   double timeStep;
+};
 
 
 /*************************************
@@ -35,15 +96,18 @@ public:
  **************************************/
 void callBack(const Interface* pUI, void* p)
 {
-   // the first step is to cast the void pointer into a game object. This
-   // is the first step of every single callback function in OpenGL. 
+   // Cast the void pointer into a Simulator object
    Simulator * pSimulator = (Simulator *)p;
 
    ogstream gout;
 
-   // draw the ground
-   pSimulator->ground.draw(gout);
+   // Update the simulation state
+   pSimulator->update(pUI);
+
+   // Draw the current state
+   pSimulator->draw(gout);
 }
+
 
 /*********************************
  * Main is pretty sparse.  Just initialize
@@ -64,7 +128,6 @@ int main(int argc, char** argv)
    // Run the unit tests
    testRunner();
 
-   
    // Initialize OpenGL
    Position posUpperRight(400, 400);
    Interface ui("Lunar Lander", posUpperRight);

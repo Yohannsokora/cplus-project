@@ -81,3 +81,4 @@ private:
    Angle    angle;       // the orientation of the lander
    double   fuel;        // amount of fuel remaining
 };
+ 
