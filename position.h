@@ -1,61 +1,37 @@
-/***********************************************************************
- * Header File:
- *    POSITION 
- * Author:
- *    Br. Helfrich
- * Summary:
- *    Everything we need to know about a location on the screen.
- ************************************************************************/
-
 #pragma once
+#include <iostream>
 
-
-class Velocity;        // for Position::add()
-class Acceleration;    // for Position::add()
-class TestPosition;    // for the unit tests
-class TestLander;      // for the unit tests
-
-/*********************************************
- * POSITION
- * A single position on the screen
- *********************************************/
-class Position
-{
-   friend TestPosition;    // for the unit tests
-   friend TestLander;      // for the unit tests
-   
+class Position {
 public:
-   // constructors
-   Position()                     : x(0.0), y(0.0) { }
-   Position(const Position & pos) : x(pos.x), y(pos.y) { }
-   Position(double x, double y);
+    Position() : x(0.0), y(0.0) {}
+    Position(double x, double y) : x(x), y(y) {}
 
-   // getters
-   double getX() const { return x; }
-   double getY() const { return y; }
-   bool operator == (const Position & rhs) const
-   {
-      return x == rhs.x && y == rhs.y;
-   }
-   bool operator != (const Position & rhs) const
-   {
-      return x != rhs.x || y != rhs.y;
-   }
+    // Getters and setters
+    double getMetersX() const { return x; }
+    double getMetersY() const { return y; }
+    double getPixelsX() const { return x / metersFromPixels; }
+    double getPixelsY() const { return y / metersFromPixels; }
+    void setMetersX(double xVal) { x = xVal; }
+    void setMetersY(double yVal) { y = yVal; }
+    void setPixelsX(double xPixels) { x = xPixels * metersFromPixels; }
+    void setPixelsY(double yPixels) { y = yPixels * metersFromPixels; }
+    void addMetersX(double dx) { x += dx; }
+    void addMetersY(double dy) { y += dy; }
 
-   // setters
-   void setX(double x) { this->x = x; }
-   void setY(double y) { this->y = y; }
-   void addX(double x) { this->x += x; }
-   void addY(double y) { this->y += y; }
-   void add (const Acceleration & a, const Velocity & v, double t);
-   Position & operator = (const Position & rhs)
-   {
-      x = rhs.x;
-      y = rhs.y;
-      return *this;
-   }
+    // Deal with the ratio of meters to pixels
+    void setZoom(double metersFromPixels) {
+        this->metersFromPixels = metersFromPixels;
+    }
+    double getZoom() const { return metersFromPixels; }
+
+    friend std::ostream& operator<<(std::ostream& out, const Position& pos);
+    friend std::istream& operator>>(std::istream& in, Position& pos);
 
 private:
-   double x;           // horizontal position
-   double y;           // vertical position
+    double x;
+    double y;
+    static double metersFromPixels;
 };
+
+std::ostream& operator<<(std::ostream& out, const Position& pos);
+std::istream& operator>>(std::istream& in, Position& pos);

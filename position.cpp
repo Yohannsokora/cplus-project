@@ -1,34 +1,16 @@
-/***********************************************************************
- * Source File:
- *    POSITION
- * Author:
- *    Br. Helfrich
- * Summary:
- *    Everything we need to know about a location on the screen.
- ************************************************************************/
-
 #include "position.h"
-#include "velocity.h"
-#include "acceleration.h"
 
-/******************************************
- * POINT : CONSTRUCTOR WITH X,Y
- * Initialize the point to the passed position
- *****************************************/
-Position::Position(double x, double y) : x(0.0), y(0.0)
-{
-   setX(x);
-   setY(y);
+double Position::metersFromPixels = 1.0;
+
+std::ostream& operator<<(std::ostream& out, const Position& pos) {
+    out << "(" << pos.getMetersX() << "m, " << pos.getMetersY() << "m)";
+    return out;
 }
 
-/******************************************
- * POINT : ADD
- * Update point based on the distance formula
- *   s = s_0 + vt + 1/2 a t^2
- *****************************************/
-void Position::add(const Acceleration & a, const Velocity & v, double t)
-{
-   x += v.getDX() * t + 0.5 * a.getDDX() * t * t;
-   y += v.getDY() * t + 0.5 * a.getDDY() * t * t;
+std::istream& operator>>(std::istream& in, Position& pos) {
+    double x, y;
+    in >> x >> y;
+    pos.setMetersX(x);
+    pos.setMetersY(y);
+    return in;
 }
-
